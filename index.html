@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe</title>
+    <title>Tic-Tac-Toe vs Bot</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .cell {
@@ -13,7 +13,7 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen">
-    <h1 class="text-3xl font-bold mb-6">Tic-Tac-Toe</h1>
+    <h1 class="text-3xl font-bold mb-6">Tic-Tac-Toe (vs Bot)</h1>
 
     <div id="game" class="grid grid-cols-3 gap-2">
         <!-- Game cells will be generated here -->
@@ -29,7 +29,6 @@
         const resetButton = document.getElementById('reset');
 
         let board = ['', '', '', '', '', '', '', '', ''];
-        let currentPlayer = 'X';
         let isGameOver = false;
 
         const winningCombinations = [
@@ -50,52 +49,85 @@
                 cellDiv.className = 'cell bg-white border-2 border-gray-300 flex items-center justify-center text-2xl font-bold';
                 cellDiv.dataset.index = index;
                 cellDiv.textContent = cell;
-                cellDiv.addEventListener('click', handleMove);
+                cellDiv.addEventListener('click', handlePlayerMove);
                 game.appendChild(cellDiv);
             });
         }
 
-        function handleMove(e) {
+        function handlePlayerMove(e) {
             const index = e.target.dataset.index;
             if (isGameOver || board[index]) return;
 
-            board[index] = currentPlayer;
-            e.target.textContent = currentPlayer;
+            board[index] = 'X';
+            e.target.textContent = 'X';
             checkWinner();
 
             if (!isGameOver) {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                status.textContent = `Player ${currentPlayer}'s turn`;
+                status.textContent = `Bot's turn...`;
+                setTimeout(botMove, 500); // Add a slight delay for the bot's move
             }
+        }
+
+        function botMove() {
+            if (isGameOver) return;
+
+            // Implement smarter bot logic
+            const winningMove = findBestMove('O');
+            const blockingMove = findBestMove('X');
+
+            const botMoveIndex = winningMove !== null ? winningMove : blockingMove !== null ? blockingMove : getRandomMove();
+
+            board[botMoveIndex] = 'O';
+            document.querySelector(`[data-index='${botMoveIndex}']`).textContent = 'O';
+
+            checkWinner();
+
+            if (!isGameOver) {
+                status.textContent = `Player's turn`;
+            }
+        }
+
+        function findBestMove(player) {
+            for (const [a, b, c] of winningCombinations) {
+                const line = [board[a], board[b], board[c]];
+                if (line.filter(cell => cell === player).length === 2 && line.includes('')) {
+                    return [a, b, c].find(index => board[index] === '');
+                }
+            }
+            return null;
+        }
+
+        function getRandomMove() {
+            const availableMoves = board.map((cell, index) => cell === '' ? index : null).filter(index => index !== null);
+            return availableMoves[Math.floor(Math.random() * availableMoves.length)];
         }
 
         function checkWinner() {
             for (const combination of winningCombinations) {
                 const [a, b, c] = combination;
                 if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    status.textContent = `Player ${board[a]} wins!`;
+                    status.textContent = `${board[a]} wins!`;
                     isGameOver = true;
                     return;
                 }
             }
 
             if (board.every(cell => cell)) {
-                status.textContent = "It's a draw!";
+                status.textContent = 'It\'s a draw!';
                 isGameOver = true;
             }
         }
 
         resetButton.addEventListener('click', () => {
             board = ['', '', '', '', '', '', '', '', ''];
-            currentPlayer = 'X';
             isGameOver = false;
-            status.textContent = `Player ${currentPlayer}'s turn`;
+            status.textContent = `Player's turn`;
             createBoard();
         });
 
         // Initialize the game
         createBoard();
-        status.textContent = `Player ${currentPlayer}'s turn`;
+        status.textContent = `Player's turn`;
     </script>
 </body>
 </html>
